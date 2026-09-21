@@ -1,10 +1,15 @@
 from django.db.models import Count, QuerySet
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import CreateAPIView, ListAPIView
 
-from users.permissions import IsPlayer
+from users.permissions import IsHost, IsPlayer
 
 from .models import Game, Participant
-from .serializers import HistoryEntrySerializer
+from .serializers import GameCreateSerializer, HistoryEntrySerializer
+
+
+class GameCreateView(CreateAPIView):
+    permission_classes = [IsHost]
+    serializer_class = GameCreateSerializer
 
 
 class HistoryView(ListAPIView):

@@ -1,6 +1,27 @@
+from django.db.models import QuerySet
 from rest_framework import serializers
 
-from .models import Participant
+from quizzes.models import Quiz
+
+from .models import Game, Participant
+from .services import create_game
+
+
+class OwnQuizField(serializers.PrimaryKeyRelatedField):
+    def get_queryset(self) -> QuerySet[Quiz]:
+        return Quiz.objects.filter(owner=self.context["request"].user)
+
+
+class GameCreateSerializer(serializers.ModelSerializer):
+    quiz = OwnQuizField()
+
+    class Meta:
+        model = Game
+        fields = ["code", "quiz"]
+        read_only_fields = ["code"]
+
+    def create(self, validated_data: dict[str, Quiz]) -> Game:
+        return create_game(validated_data["quiz"])
 
 
 class HistoryEntrySerializer(serializers.ModelSerializer):

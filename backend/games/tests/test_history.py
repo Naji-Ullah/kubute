@@ -5,12 +5,11 @@ from django.utils import timezone
 from rest_framework import status
 
 from core.testing import APITestCase
+from games.models import Game, Participant
 from quizzes.models import Quiz
 from quizzes.tests import make_quiz
 from users.models import Role, User
 from users.tests import make_user
-
-from .models import Game, Participant
 
 
 def make_game(quiz: Quiz, code: str, finished_at: datetime | None = None) -> Game:

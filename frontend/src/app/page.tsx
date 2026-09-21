@@ -5,7 +5,7 @@ import { homeFor } from "@/lib/user";
 const STEPS = [
   { title: "Create", body: "Hosts write questions, mark the right answer and set a timer for each one." },
   { title: "Join", body: "Players sign up with a name, a username and the nickname everyone sees." },
-  { title: "Play", body: "Questions reach every player at once. Faster right answers score more." },
+  { title: "Play", body: "The host shares a code. Questions reach every player at once, and faster right answers score more." },
   { title: "Review", body: "Every game is saved, so players can look back at their scores and ranks." },
 ];
 
@@ -23,7 +23,7 @@ export default async function HomePage() {
         </p>
         <div className="mt-10 flex flex-wrap items-center gap-3">
           {user ? (
-            <ButtonLink href={homeFor(user).href}>Your {homeFor(user).label.toLowerCase()}</ButtonLink>
+            <ButtonLink href={homeFor(user).href}>{user.role === "host" ? "Your quizzes" : "Join a game"}</ButtonLink>
           ) : (
             <>
               <ButtonLink href="/signup/host">Host a quiz</ButtonLink>

@@ -11,7 +11,7 @@ from .serializers import QuizSerializer, QuizSummarySerializer
 
 class QuizLocked(APIException):
     status_code = status.HTTP_409_CONFLICT
-    default_detail = "This quiz has been played, so it can’t be changed or deleted."
+    default_detail = "This quiz has been hosted, so it can’t be changed or deleted."
     default_code = "quiz_locked"
 
 
@@ -24,7 +24,8 @@ class QuizViewSet(viewsets.ModelViewSet):
             is_played=Exists(Game.objects.filter(quiz=OuterRef("pk")))
         )
         if self.action == "list":
-            return quizzes.annotate(question_count=Count("questions"))
+            # Meta.ordering is dropped from GROUP BY queries, so order explicitly for stable pages.
+            return quizzes.annotate(question_count=Count("questions")).order_by("-updated_at", "-id")
         return quizzes.prefetch_related("questions__choices")
 
     def get_serializer_class(self) -> type[serializers.ModelSerializer]:

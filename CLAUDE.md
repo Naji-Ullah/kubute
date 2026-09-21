@@ -2,7 +2,7 @@
 
 Live quiz app (Kahoot-style) built as a Kubernetes learning project. The app stays simple; the Kubernetes setup is the real project. The roadmap is in [PLAN.md](PLAN.md).
 
-Stack: Next.js 16 + Tailwind v4 (`frontend/`), Django 6.1 + DRF (`backend/`), Postgres 17. Redis, Celery and Django Channels come in later phases.
+Stack: Next.js 16 + Tailwind v4 (`frontend/`), Django 6.1 + DRF + Channels (`backend/`, WebSockets served by Daphne), Postgres 17. Redis and Celery come in later phases.
 
 ## Commands
 

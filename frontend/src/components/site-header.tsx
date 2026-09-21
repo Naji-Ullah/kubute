@@ -4,18 +4,19 @@ import { Suspense } from "react";
 import { ButtonLink } from "@/components/button";
 import { LogoutButton } from "@/components/logout-button";
 import { getOptionalUser } from "@/lib/auth";
-import { displayName, homeFor } from "@/lib/user";
+import { displayName, navFor } from "@/lib/user";
 
 async function AccountNav() {
   const user = await getOptionalUser();
 
   if (user) {
-    const home = homeFor(user);
     return (
       <>
-        <ButtonLink href={home.href} variant="ghost">
-          {home.label}
-        </ButtonLink>
+        {navFor(user).map((link) => (
+          <ButtonLink key={link.href} href={link.href} variant="ghost">
+            {link.label}
+          </ButtonLink>
+        ))}
         <span className="px-3 text-muted">{displayName(user)}</span>
         <LogoutButton />
       </>

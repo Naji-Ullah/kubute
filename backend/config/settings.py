@@ -18,6 +18,8 @@ ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["localhost", "127.0.0.
 CSRF_TRUSTED_ORIGINS = env.list("DJANGO_CSRF_TRUSTED_ORIGINS", default=[])
 
 INSTALLED_APPS = [
+    # First, so `runserver` serves WebSockets too.
+    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -102,6 +104,12 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 20,
     "DEFAULT_THROTTLE_RATES": {"auth": env("DJANGO_AUTH_THROTTLE_RATE", default="10/min")},
 }
+
+
+# WebSockets: in memory while there is a single WebSocket server; Redis comes with the
+# second replica (PLAN.md step 4).
+
+CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
 
 
 # I18n
