@@ -1,5 +1,5 @@
 # `make db` starts Postgres only. `make up` also runs the app from its production
-# images (profile "app"), the same images Kubernetes will run.
+# images (profile "app") behind a gateway on http://localhost:8080.
 
 x-backend: &backend
   build: ./backend
@@ -39,8 +39,6 @@ services:
 
   backend:
     <<: *backend
-    ports:
-      - "127.0.0.1:8000:8000"
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -55,11 +53,20 @@ services:
     image: kubute-frontend
     environment:
       API_URL: http://backend:8000
-    ports:
-      - "127.0.0.1:3000:3000"
     depends_on:
       backend:
         condition: service_healthy
+    profiles: [app]
+
+  # Local stand-in for the cluster Gateway: same routes, one origin.
+  gateway:
+    image: caddy:2.11-alpine
+    ports:
+      - "127.0.0.1:8080:80"
+    volumes:
+      - ./gateway/Caddyfile:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - frontend
     profiles: [app]
 
 volumes:

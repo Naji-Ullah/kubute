@@ -1,22 +1,47 @@
 export class ApiError extends Error {
   constructor(
     public readonly status: number,
-    message: string,
+    public readonly body: unknown,
   ) {
-    super(message);
+    super(`API request failed with status ${status}`);
   }
 }
 
-// Server: call Django directly (API_URL, the Service URL in k8s).
-// Browser: stay relative so /api hits the same origin (Next rewrite in dev, Gateway in k8s).
-function baseUrl(): string {
-  return typeof window === "undefined" ? (process.env.API_URL ?? "http://localhost:8000") : "";
-}
-
-export async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${baseUrl()}/api${path}`, { cache: "no-store", ...init });
+export async function parseResponse<T>(res: Response): Promise<T> {
+  const body: unknown = res.status === 204 ? undefined : await res.json().catch(() => undefined);
   if (!res.ok) {
-    throw new ApiError(res.status, `${init?.method ?? "GET"} /api${path} failed with ${res.status}`);
+    throw new ApiError(res.status, body);
   }
-  return res.json() as Promise<T>;
+  return body as T;
+}
+
+export type FormErrors = { fields: Record<string, string>; form?: string };
+
+const FALLBACK_ERROR = "Something went wrong. Please try again.";
+
+function firstMessage(value: unknown): string | undefined {
+  if (typeof value === "string") return value;
+  const items = Array.isArray(value) ? value : value && typeof value === "object" ? Object.values(value) : [];
+  for (const item of items) {
+    const message = firstMessage(item);
+    if (message) return message;
+  }
+  return undefined;
+}
+
+export function toFormErrors(error: unknown): FormErrors {
+  if (!(error instanceof ApiError) || !error.body || typeof error.body !== "object") {
+    return { fields: {}, form: FALLBACK_ERROR };
+  }
+  const fields: Record<string, string> = {};
+  let form: string | undefined;
+  for (const [key, value] of Object.entries(error.body)) {
+    const message = firstMessage(value) ?? FALLBACK_ERROR;
+    if (key === "detail" || key === "non_field_errors") {
+      form = message;
+    } else {
+      fields[key] = message;
+    }
+  }
+  return { fields, form };
 }

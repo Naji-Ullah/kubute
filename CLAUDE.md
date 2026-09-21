@@ -12,7 +12,7 @@ make migrate               # apply migrations
 make backend               # Django dev server :8000
 make frontend              # Next dev server :3000
 make test                  # backend tests (real Postgres)
-make up / make down        # full stack from the production images / stop everything
+make up / make down        # production images behind the gateway on :8080 / stop everything
 cd frontend && npm run lint && npx tsc --noEmit
 ```
 
@@ -26,8 +26,8 @@ These override generic advice in the skills below when they conflict.
 - **API URLs have no trailing slash** (`/api/health/ready`). Use `DefaultRouter(trailing_slash=False)` for DRF routers.
 - **No state in process memory.** Game state lives in Postgres or Redis so any pod can die or scale.
 - **One backend image, many roles.** API, WebSocket server, Celery worker, migrate Job and CronJobs all use the same image with a different command.
-- **The browser only calls same-origin `/api/...`.** Locally a dev-only Next rewrite forwards it; in the cluster the Gateway does. Server components call Django through `API_URL`. Never expose the API URL through `NEXT_PUBLIC_*`.
-- **Credentials go in httpOnly cookies**, never `localStorage`.
+- **The browser only calls same-origin `/api/...`.** In dev a Next rewrite forwards `/api`; the Caddy gateway (`make up`) and the cluster Gateway route `/api`, `/admin` and `/static` to Django and everything else to Next. Server components call Django through `API_URL`. Never expose the API URL through `NEXT_PUBLIC_*`.
+- **Auth is Django sessions.** httpOnly session cookie, CSRF header on every unsafe request (`clientApi` handles it). Never store credentials in `localStorage`.
 - **Scheduled work runs as Kubernetes CronJobs** that call management commands, not Celery Beat.
 - **Cluster routing uses the Gateway API.** ingress-nginx is retired; don't add Ingress manifests for it.
 - **Images:** multi-stage, non-root, pinned base image tags, no secrets in layers.
