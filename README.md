@@ -20,7 +20,7 @@ make backend    # http://localhost:8000
 make frontend   # http://localhost:3000
 ```
 
-Open http://localhost:3000. Hosts sign up at `/signup/host`, players at `/signup/player`, and everyone logs in at `/login`. `/status` shows whether Django and Postgres are reachable.
+Open http://localhost:3000. Hosts sign up at `/signup/host`, players at `/signup/player`, and everyone logs in at `/login`. Hosts build quizzes at `/quizzes`. `/status` shows whether Django and Postgres are reachable.
 
 | Command | What it does |
 | --- | --- |
@@ -60,6 +60,7 @@ backend/
   config/     settings, urls, wsgi/asgi
   core/       health endpoints
   users/      User model (host/player roles), auth API under /api/auth
+  quizzes/    quiz builder API under /api/quizzes (hosts only)
 frontend/
   Dockerfile       production image (Next standalone server)
   src/lib/         API clients (browser: CSRF; server: forwards cookies), auth helpers

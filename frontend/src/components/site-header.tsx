@@ -12,6 +12,11 @@ async function AccountNav() {
   if (user) {
     return (
       <>
+        {user.role === "host" ? (
+          <ButtonLink href="/quizzes" variant="ghost">
+            Quizzes
+          </ButtonLink>
+        ) : null}
         <span className="px-3 text-muted">{displayName(user)}</span>
         <LogoutButton />
       </>

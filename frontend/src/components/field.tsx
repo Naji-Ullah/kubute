@@ -2,6 +2,9 @@ import type { ComponentProps } from "react";
 
 export type FieldProps = ComponentProps<"input"> & { label: string; name: string; error?: string };
 
+export const inputClass =
+  "h-10 w-full rounded-md border border-border bg-background px-3 text-sm outline-none transition placeholder:text-muted focus:border-foreground aria-invalid:border-red-500";
+
 export function Field({ label, name, error, id = name, ...props }: FieldProps) {
   const errorId = `${id}-error`;
   return (
@@ -14,7 +17,7 @@ export function Field({ label, name, error, id = name, ...props }: FieldProps) {
         name={name}
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? errorId : undefined}
-        className="h-10 w-full rounded-md border border-border bg-background px-3 text-sm outline-none transition placeholder:text-muted focus:border-foreground aria-invalid:border-red-500"
+        className={inputClass}
         {...props}
       />
       {error ? (
