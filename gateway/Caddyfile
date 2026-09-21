@@ -1,7 +1,5 @@
 :80 {
-	@django path /api/* /admin /admin/* /static/*
+	@django path /api/* /admin /admin/* /static/* /ws/*
 	reverse_proxy @django backend:8000
-	@websocket path /ws/*
-	reverse_proxy @websocket websocket:8001
 	reverse_proxy frontend:3000
 }
