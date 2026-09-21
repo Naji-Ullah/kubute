@@ -6,7 +6,7 @@ import { cache } from "react";
 import { ApiError } from "./api";
 import { serverApi } from "./api.server";
 import type { Role, User } from "./types";
-import { homePath } from "./user";
+import { homeFor } from "./user";
 
 export const getCurrentUser = cache(async (): Promise<User | null> => {
   try {
@@ -30,12 +30,12 @@ export async function getOptionalUser(): Promise<User | null> {
 
 export async function redirectIfSignedIn(): Promise<void> {
   const user = await getOptionalUser();
-  if (user) redirect(homePath(user));
+  if (user) redirect(homeFor(user).href);
 }
 
 export async function requireRole(role: Role): Promise<User> {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
-  if (user.role !== role) redirect(homePath(user));
+  if (user.role !== role) redirect(homeFor(user).href);
   return user;
 }

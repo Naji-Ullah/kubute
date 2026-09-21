@@ -49,6 +49,7 @@ export function QuizEditor({ quiz }: { quiz?: Quiz }) {
   const [draft, dispatch] = useReducer(draftReducer, quiz, toDraft);
   const [errors, setErrors] = useState<EditorErrors>({ questions: [] });
   const [pending, startTransition] = useTransition();
+  const locked = quiz?.is_played ?? false;
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -68,42 +69,46 @@ export function QuizEditor({ quiz }: { quiz?: Quiz }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
       <FormError message={errors.form} />
-      <Field
-        label="Title"
-        name="title"
-        value={draft.title}
-        onChange={(event) => dispatch({ type: "setTitle", value: event.target.value })}
-        required
-        maxLength={120}
-        error={errors.title}
-      />
-      <ol className="space-y-6">
-        {draft.questions.map((question, index) => (
-          <li key={question.key}>
-            <QuestionCard
-              question={question}
-              index={index}
-              error={errors.questions[index]}
-              canRemove={draft.questions.length > 1}
-              dispatch={dispatch}
-            />
-          </li>
-        ))}
-      </ol>
-      <Button
-        type="button"
-        variant="secondary"
-        disabled={draft.questions.length >= MAX_QUESTIONS}
-        onClick={() => dispatch({ type: "addQuestion" })}
-      >
-        Add question
-      </Button>
-      <div className="flex gap-3 border-t border-border pt-6">
-        <Button type="submit" disabled={pending}>
-          {pending ? "Saving…" : "Save quiz"}
+      <fieldset disabled={locked} className="space-y-8">
+        <Field
+          label="Title"
+          name="title"
+          value={draft.title}
+          onChange={(event) => dispatch({ type: "setTitle", value: event.target.value })}
+          required
+          maxLength={120}
+          error={errors.title}
+        />
+        <ol className="space-y-6">
+          {draft.questions.map((question, index) => (
+            <li key={question.key}>
+              <QuestionCard
+                question={question}
+                index={index}
+                error={errors.questions[index]}
+                canRemove={draft.questions.length > 1}
+                dispatch={dispatch}
+              />
+            </li>
+          ))}
+        </ol>
+        <Button
+          type="button"
+          variant="secondary"
+          disabled={draft.questions.length >= MAX_QUESTIONS}
+          onClick={() => dispatch({ type: "addQuestion" })}
+        >
+          Add question
         </Button>
-        <ButtonLink href="/quizzes" variant="ghost">
-          Cancel
+      </fieldset>
+      <div className="flex gap-3 border-t border-border pt-6">
+        {locked ? null : (
+          <Button type="submit" disabled={pending}>
+            {pending ? "Saving…" : "Save quiz"}
+          </Button>
+        )}
+        <ButtonLink href="/quizzes" variant={locked ? "secondary" : "ghost"}>
+          {locked ? "Back to quizzes" : "Cancel"}
         </ButtonLink>
       </div>
     </form>

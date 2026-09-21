@@ -20,7 +20,7 @@ make backend    # http://localhost:8000
 make frontend   # http://localhost:3000
 ```
 
-Open http://localhost:3000. Hosts sign up at `/signup/host`, players at `/signup/player`, and everyone logs in at `/login`. Hosts build quizzes at `/quizzes`. `/status` shows whether Django and Postgres are reachable.
+Open http://localhost:3000. Hosts sign up at `/signup/host`, players at `/signup/player`, and everyone logs in at `/login`. Hosts build quizzes at `/quizzes`; players see their past games at `/history`. `/status` shows whether Django and Postgres are reachable.
 
 | Command | What it does |
 | --- | --- |
@@ -28,6 +28,8 @@ Open http://localhost:3000. Hosts sign up at `/signup/host`, players at `/signup
 | `make down` | Stop all containers (data kept in a volume) |
 | `make db-reset` | Stop all containers and delete the database |
 | `make test` | Run backend tests |
+
+Live games arrive in the next phase. Until then you can record a finished game in the admin (`make superuser`, then Games → Add) to see it in a player's history.
 
 ## Postgres in DBeaver
 
@@ -60,7 +62,8 @@ backend/
   config/     settings, urls, wsgi/asgi
   core/       health endpoints
   users/      User model (host/player roles), auth API under /api/auth
-  quizzes/    quiz builder API under /api/quizzes (hosts only)
+  quizzes/    quiz builder API under /api/quizzes (hosts only; played quizzes are read-only)
+  games/      games and results; player history at /api/games/history
 frontend/
   Dockerfile       production image (Next standalone server)
   src/lib/         API clients (browser: CSRF; server: forwards cookies), auth helpers

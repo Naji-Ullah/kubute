@@ -35,7 +35,14 @@ export default async function QuizzesPage({ searchParams }: PageProps<"/quizzes"
                 href={`/quizzes/${quiz.id}`}
                 className="flex items-center justify-between gap-4 py-4 transition hover:text-muted"
               >
-                <span className="truncate font-medium">{quiz.title}</span>
+                <span className="flex min-w-0 items-center gap-2">
+                  <span className="truncate font-medium">{quiz.title}</span>
+                  {quiz.is_played ? (
+                    <span className="shrink-0 rounded-full border border-border px-2 py-0.5 text-xs text-muted">
+                      Played
+                    </span>
+                  ) : null}
+                </span>
                 <span className="shrink-0 text-sm text-muted">
                   {plural(quiz.question_count, "question")} · {formatDate(quiz.updated_at)}
                 </span>

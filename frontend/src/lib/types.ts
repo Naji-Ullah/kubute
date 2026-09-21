@@ -19,6 +19,7 @@ export type QuizSummary = {
   id: number;
   title: string;
   question_count: number;
+  is_played: boolean;
   updated_at: string;
 };
 
@@ -30,6 +31,19 @@ export type Quiz = {
   id: number;
   title: string;
   questions: Question[];
+  is_played: boolean;
   created_at: string;
   updated_at: string;
+};
+
+export type HistoryEntry = {
+  id: number;
+  game_code: string;
+  quiz_title: string;
+  finished_at: string;
+  score: number;
+  correct_answers: number;
+  final_rank: number | null;
+  player_count: number;
+  question_count: number;
 };
