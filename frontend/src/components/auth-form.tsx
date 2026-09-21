@@ -8,7 +8,7 @@ import { Field, FormError, type FieldProps } from "@/components/field";
 import { toFormErrors, type FormErrors } from "@/lib/api";
 import { clientApi } from "@/lib/api.client";
 import type { User } from "@/lib/types";
-import { homePath } from "@/lib/user";
+import { homeFor } from "@/lib/user";
 
 const FIELDS = {
   name: { name: "name", label: "Name", autoComplete: "name", maxLength: 100 },
@@ -42,7 +42,7 @@ export function AuthForm({ endpoint, fields, submitLabel }: AuthFormProps) {
     startTransition(async () => {
       try {
         const user = await clientApi<User>(endpoint, { method: "POST", body });
-        router.replace(homePath(user));
+        router.replace(homeFor(user).href);
         router.refresh();
       } catch (error) {
         setErrors(toFormErrors(error));

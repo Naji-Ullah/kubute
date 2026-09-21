@@ -16,8 +16,13 @@ export default async function EditQuizPage({ params }: PageProps<"/quizzes/[id]"
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-12">
       <div className="flex items-start justify-between gap-4">
-        <h1 className="text-2xl font-semibold tracking-tight">Edit quiz</h1>
-        <DeleteQuizButton quizId={quiz.id} />
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">{quiz.is_played ? "Quiz" : "Edit quiz"}</h1>
+          {quiz.is_played ? (
+            <p className="mt-2 text-sm text-muted">This quiz has been played, so it’s read-only.</p>
+          ) : null}
+        </div>
+        {quiz.is_played ? null : <DeleteQuizButton quizId={quiz.id} />}
       </div>
       <div className="mt-8">
         <QuizEditor quiz={quiz} />

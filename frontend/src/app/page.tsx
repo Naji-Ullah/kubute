@@ -1,6 +1,6 @@
 import { ButtonLink } from "@/components/button";
 import { getOptionalUser } from "@/lib/auth";
-import { displayName } from "@/lib/user";
+import { homeFor } from "@/lib/user";
 
 const STEPS = [
   { title: "Create", body: "Hosts write questions, mark the right answer and set a timer for each one." },
@@ -22,12 +22,8 @@ export default async function HomePage() {
           kubute runs live quizzes: build one, share a code, and see every answer and score as it happens.
         </p>
         <div className="mt-10 flex flex-wrap items-center gap-3">
-          {user?.role === "host" ? (
-            <ButtonLink href="/quizzes">Your quizzes</ButtonLink>
-          ) : user ? (
-            <p className="text-muted">
-              Signed in as <span className="text-foreground">{displayName(user)}</span>.
-            </p>
+          {user ? (
+            <ButtonLink href={homeFor(user).href}>Your {homeFor(user).label.toLowerCase()}</ButtonLink>
           ) : (
             <>
               <ButtonLink href="/signup/host">Host a quiz</ButtonLink>

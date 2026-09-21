@@ -35,11 +35,15 @@ class QuestionSerializer(serializers.ModelSerializer):
 
 class QuizSerializer(serializers.ModelSerializer):
     questions = QuestionSerializer(many=True)
+    is_played = serializers.SerializerMethodField()
 
     class Meta:
         model = Quiz
-        fields = ["id", "title", "questions", "created_at", "updated_at"]
+        fields = ["id", "title", "questions", "is_played", "created_at", "updated_at"]
         read_only_fields = ["id", "created_at", "updated_at"]
+
+    def get_is_played(self, quiz: Quiz) -> bool:
+        return getattr(quiz, "is_played", False)
 
     def validate_questions(self, questions: list[QuestionData]) -> list[QuestionData]:
         if not 1 <= len(questions) <= MAX_QUESTIONS:
@@ -55,8 +59,9 @@ class QuizSerializer(serializers.ModelSerializer):
 
 class QuizSummarySerializer(serializers.ModelSerializer):
     question_count = serializers.IntegerField(read_only=True)
+    is_played = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = Quiz
-        fields = ["id", "title", "question_count", "updated_at"]
+        fields = ["id", "title", "question_count", "is_played", "updated_at"]
         read_only_fields = fields
