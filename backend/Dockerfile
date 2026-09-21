@@ -27,5 +27,6 @@ RUN DJANGO_SECRET_KEY=collectstatic POSTGRES_DB=_ POSTGRES_USER=_ POSTGRES_PASSW
     python manage.py collectstatic --noinput
 
 USER app
-EXPOSE 8000
+# 8000: API (gunicorn). 8001: WebSockets (daphne), started with a different command.
+EXPOSE 8000 8001
 CMD ["gunicorn", "config.wsgi:application"]

@@ -6,34 +6,38 @@ A live quiz app, built to practise Kubernetes end to end. The app logic stays si
 
 **Host** (has an account): logs in, builds a quiz, clicks "Host" and gets a 6-character code. The lobby fills with players live. The host starts the game; each question shows with a timer, then the correct answer and the leaderboard, then the next question. It ends on a podium.
 
-**Player** (no account): enters the code and a nickname, answers on their phone, and sees whether they were right and their rank.
+**Player** (has an account with a name, username and nickname): enters the code, answers on their phone, sees whether they were right and their rank, and can look back at past games.
 
 ### Data model
 
 ```
 User ─< Quiz ─< Question ─< Choice
-Quiz ─< Game ─< Player ─< Answer >─ Choice
+Quiz ─< Game ─< Participant ─< Answer >─ Choice
 ```
 
-A `Game` holds its `code`, `status` (lobby / question / reveal / finished), `current_question` and `question_ends_at`.
+A `Game` holds its `code`, `status` (lobby / question / reveal / finished), `question_index` and `question_ends_at`.
 
 **Scoring:** a correct answer earns 500–1000 points, more for answering faster. A wrong or late answer earns 0.
 
 ### Pages
 
-`/` (enter code), `/login`, `/quizzes`, `/quizzes/new`, `/quizzes/[id]`, `/host/[code]`, `/play/[code]`
+`/`, `/login`, `/signup/host`, `/signup/player`, `/quizzes`, `/quizzes/new`, `/quizzes/[id]`, `/host/[code]`, `/play` (enter code), `/play/[code]`, `/history`
 
 ### REST API (Django + DRF)
 
 - Auth: register, login, logout, me
 - Quiz CRUD
-- `POST /games` creates a game, `POST /games/{code}/join` joins one, `GET /games/{code}` returns current state (used after a refresh or reconnect)
+- `POST /games` creates a game and returns its code
+- `GET /games/history` lists a player's finished games
+
+Players join by opening the game's WebSocket while it is in the lobby, and the current state arrives over the socket on every (re)connect, so there is no separate join or state endpoint.
 
 ### WebSocket: `/ws/games/{code}`
 
-- Host sends `start`, `end_question`, `next`
+- Host sends `start`, `end_question`, `next`, `cancel`
 - Player sends `answer`
-- Server sends `player_joined`, `question_started`, `question_ended` (correct answer + leaderboard), `game_finished`
+- Server sends `state` (a full snapshot on connect and on every change: someone joins, a question starts, the reveal with the correct answer and leaderboard, the final results), `answered` (someone answered), and `error`
+- Close codes 4401/4403/4404 mean "not logged in / not allowed / no such game", 4410 means the host cancelled; the client reconnects after any other close
 
 ### Where the work happens
 
@@ -41,7 +45,7 @@ A player's answer goes to a WebSocket pod, which stores it in Postgres. At the e
 
 ### Auth
 
-Hosts use Django session cookies. This works because the browser always talks to one origin, and the cookie also rides along on the WebSocket connection, so no JWTs are needed. Players get a token in an httpOnly cookie when they join, which lets them reconnect after a pod dies.
+Hosts and players both use Django session cookies. This works because the browser always talks to one origin, and the cookie also rides along on the WebSocket connection, so no JWTs are needed and a player can reconnect after a pod dies.
 
 ## Rules that make this work in Kubernetes
 

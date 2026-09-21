@@ -39,7 +39,7 @@ export default async function QuizzesPage({ searchParams }: PageProps<"/quizzes"
                   <span className="truncate font-medium">{quiz.title}</span>
                   {quiz.is_played ? (
                     <span className="shrink-0 rounded-full border border-border px-2 py-0.5 text-xs text-muted">
-                      Played
+                      Hosted
                     </span>
                   ) : null}
                 </span>

@@ -48,6 +48,19 @@ services:
       timeout: 3s
       retries: 10
 
+  # Same image, different command: the WebSocket server runs apart from the API.
+  websocket:
+    <<: *backend
+    command: ["daphne", "--bind", "0.0.0.0", "--port", "8001", "--proxy-headers", "config.asgi:application"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/api/health/ready')"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   frontend:
     build: ./frontend
     image: kubute-frontend
@@ -60,13 +73,13 @@ services:
 
   # Local stand-in for the cluster Gateway: same routes, one origin.
   gateway:
-    image: caddy:2.11-alpine
+    build: ./gateway
+    image: kubute-gateway
     ports:
       - "127.0.0.1:8080:80"
-    volumes:
-      - ./gateway/Caddyfile:/etc/caddy/Caddyfile:ro
     depends_on:
       - frontend
+      - websocket
     profiles: [app]
 
 volumes:
