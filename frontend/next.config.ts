@@ -1,14 +1,14 @@
 import type { NextConfig } from "next";
+import { PHASE_DEVELOPMENT_SERVER } from "next/constants";
 
-const apiUrl = process.env.API_URL ?? "http://localhost:8000";
-
-const nextConfig: NextConfig = {
-  output: "standalone",
-  // Local stand-in for the Ingress: /api goes to Django on the same origin.
-  // In the cluster the Ingress routes /api before requests ever reach Next.
-  async rewrites() {
-    return [{ source: "/api/:path*", destination: `${apiUrl}/api/:path*` }];
-  },
+const devRewrites: NextConfig["rewrites"] = async () => {
+  const apiUrl = process.env.API_URL ?? "http://localhost:8000";
+  return [{ source: "/api/:path*", destination: `${apiUrl}/api/:path*` }];
 };
 
-export default nextConfig;
+export default function nextConfig(phase: string): NextConfig {
+  return {
+    output: "standalone",
+    rewrites: phase === PHASE_DEVELOPMENT_SERVER ? devRewrites : undefined,
+  };
+}

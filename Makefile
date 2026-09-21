@@ -1,6 +1,6 @@
 MANAGE := cd backend && .venv/bin/python manage.py
 
-.PHONY: setup db db-down db-reset migrate superuser backend frontend test
+.PHONY: setup db up down db-reset migrate superuser backend frontend test
 
 setup:
 	python3 -m venv backend/.venv
@@ -12,11 +12,14 @@ setup:
 db:
 	docker compose up -d --wait postgres
 
-db-down:
-	docker compose down
+up:
+	docker compose --profile app up -d --build --wait
+
+down:
+	docker compose --profile app down
 
 db-reset:
-	docker compose down -v
+	docker compose --profile app down -v
 
 migrate:
 	$(MANAGE) migrate

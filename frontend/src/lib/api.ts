@@ -8,8 +8,8 @@ export class ApiError extends Error {
 }
 
 // Server: call Django directly (API_URL, the Service URL in k8s).
-// Browser: stay relative so /api hits the same origin (Next rewrite locally, Ingress in k8s).
-function baseUrl() {
+// Browser: stay relative so /api hits the same origin (Next rewrite in dev, Gateway in k8s).
+function baseUrl(): string {
   return typeof window === "undefined" ? (process.env.API_URL ?? "http://localhost:8000") : "";
 }
 

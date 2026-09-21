@@ -1,3 +1,17 @@
+# `make db` starts Postgres only. `make up` also runs the app from its production
+# images (profile "app"), the same images Kubernetes will run.
+
+x-backend: &backend
+  build: ./backend
+  image: kubute-backend
+  env_file: backend/.env
+  environment:
+    POSTGRES_HOST: postgres
+    POSTGRES_PORT: "5432"
+    DJANGO_DEBUG: "false"
+    DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,backend
+  profiles: [app]
+
 services:
   postgres:
     image: postgres:17-alpine
@@ -14,6 +28,39 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+
+  # One-off, like the migrate Job in Kubernetes.
+  migrate:
+    <<: *backend
+    command: ["python", "manage.py", "migrate", "--noinput"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  backend:
+    <<: *backend
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health/ready')"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  frontend:
+    build: ./frontend
+    image: kubute-frontend
+    environment:
+      API_URL: http://backend:8000
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    profiles: [app]
 
 volumes:
   postgres-data:

@@ -24,8 +24,9 @@ Open http://localhost:3000. It shows whether Django and Postgres are reachable.
 
 | Command | What it does |
 | --- | --- |
-| `make db` / `make db-down` | Start / stop Postgres (data kept in a volume) |
-| `make db-reset` | Stop Postgres and delete its data |
+| `make up` | Run the whole stack from the production images (same images Kubernetes will run) |
+| `make down` | Stop all containers (data kept in a volume) |
+| `make db-reset` | Stop all containers and delete the database |
 | `make test` | Run backend tests |
 
 ## Postgres in DBeaver
@@ -46,17 +47,19 @@ New connection → PostgreSQL:
 browser ──> Next.js :3000 ──/api/*──> Django :8000 ──> Postgres :5432
 ```
 
-- The browser only ever calls `/api/...` on its own origin. Locally a Next.js rewrite forwards that to Django; in the cluster the Ingress will do it instead.
+- The browser only ever calls `/api/...` on its own origin. In `npm run dev` a Next.js rewrite forwards that to Django; in the cluster the Gateway does it instead, so production builds don't include the rewrite.
 - Server components call Django directly using `API_URL`, which becomes the in-cluster Service URL.
 - All backend config comes from environment variables (`backend/.env` locally, a ConfigMap/Secret in the cluster). The `POSTGRES_*` names match the official Postgres image, so one Secret can feed both.
 - `/api/health/live` is for the liveness probe and `/api/health/ready` for the readiness probe (it checks Postgres).
 
 ```
 backend/
+  Dockerfile  production image (gunicorn, static files via WhiteNoise)
   config/     settings, urls, wsgi/asgi
   core/       health endpoints
   users/      custom User model
 frontend/
+  Dockerfile       production image (Next standalone server)
   src/lib/api.ts   fetch helper (server vs browser base URL)
-  next.config.ts   /api rewrite, standalone output
+  next.config.ts   dev-only /api rewrite, standalone output
 ```
