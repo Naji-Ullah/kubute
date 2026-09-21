@@ -2,7 +2,7 @@
 
 Live quiz app (Kahoot-style) built as a Kubernetes learning project. The app stays simple; the Kubernetes setup is the real project. The roadmap is in [PLAN.md](PLAN.md).
 
-Stack: Next.js 16 + Tailwind v4 (`frontend/`), Django 6.1 + DRF + Channels (`backend/`, WebSockets served by Daphne), Postgres 17. Redis and Celery come in later phases.
+Stack: Next.js 16 + Tailwind v4 (`frontend/`), Django 6.1 + DRF + Channels (`backend/`, API and WebSockets served by one uvicorn process), Postgres 17. Redis and Celery come in later phases.
 
 ## Commands
 
@@ -25,7 +25,8 @@ These override generic advice in the skills below when they conflict.
 - **Tests run against real Postgres**, not SQLite.
 - **API URLs have no trailing slash** (`/api/health/ready`). Use `DefaultRouter(trailing_slash=False)` for DRF routers.
 - **No state in process memory.** Game state lives in Postgres or Redis so any pod can die or scale.
-- **One backend image, many roles.** API, WebSocket server, Celery worker, migrate Job and CronJobs all use the same image with a different command.
+- **One backend image, many roles.** API + WebSockets (uvicorn), Celery worker, migrate Job and CronJobs all use the same image with a different command.
+- **One backend replica until Redis.** The channel layer is in memory, so a second process or pod would miss broadcasts.
 - **The browser only calls same-origin `/api/...`.** In dev a Next rewrite forwards `/api`; the Caddy gateway (`make up`) and the cluster Gateway route `/api`, `/admin` and `/static` to Django and everything else to Next. Server components call Django through `API_URL`. Never expose the API URL through `NEXT_PUBLIC_*`.
 - **Auth is Django sessions.** httpOnly session cookie, CSRF header on every unsafe request (`clientApi` handles it). Never store credentials in `localStorage`.
 - **Scheduled work runs as Kubernetes CronJobs** that call management commands, not Celery Beat.

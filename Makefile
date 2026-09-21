@@ -4,7 +4,7 @@ MANAGE := cd backend && .venv/bin/python manage.py
 
 setup:
 	python3 -m venv backend/.venv
-	backend/.venv/bin/pip install -r backend/requirements.txt
+	backend/.venv/bin/pip install -r backend/requirements-dev.txt
 	test -f backend/.env || sed "s|^DJANGO_SECRET_KEY=.*|DJANGO_SECRET_KEY=$$(openssl rand -hex 32)|" backend/.env.example > backend/.env
 	test -f frontend/.env.local || cp frontend/.env.example frontend/.env.local
 	cd frontend && npm install
@@ -28,7 +28,7 @@ superuser:
 	$(MANAGE) createsuperuser
 
 backend:
-	$(MANAGE) runserver
+	cd backend && .venv/bin/uvicorn config.asgi:application --lifespan off --reload --reload-exclude .venv
 
 frontend:
 	cd frontend && npm run dev

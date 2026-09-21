@@ -1,0 +1,5 @@
+-r requirements.txt
+# channels.testing imports Daphne; the app itself is served by uvicorn.
+daphne==4.2.3
+# Daphne pulls in cbor2, whose 6.x releases need Rust to build where there's no wheel (e.g. Intel macOS).
+cbor2==5.9.0

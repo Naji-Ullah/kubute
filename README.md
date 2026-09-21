@@ -16,7 +16,7 @@ make superuser  # optional, for /admin
 ## Run
 
 ```bash
-make backend    # http://localhost:8000 (API and WebSockets)
+make backend    # http://localhost:8000 (uvicorn: API and WebSockets, reloads on change)
 make frontend   # http://localhost:3000
 ```
 
@@ -48,9 +48,8 @@ New connection → PostgreSQL:
 ## How it fits together
 
 ```
-browser ──> gateway ──/api, /admin, /static──> Django API (gunicorn) ──> Postgres
-                   ├─/ws───────────────────> Django WebSockets (daphne) ──> Postgres
-                   └─everything else───────> Next.js ──(server components)──> Django API
+browser ──> gateway ──/api, /admin, /static, /ws──> Django (uvicorn) ──> Postgres
+                   └─everything else─────────────> Next.js ──(server components)──> Django
 ```
 
 - The browser only ever calls `/api/...` on its own origin. In `npm run dev` a Next.js rewrite forwards it to Django; under `make up` the Caddy gateway does; in the cluster the Gateway API does.
@@ -58,13 +57,14 @@ browser ──> gateway ──/api, /admin, /static──> Django API (gunicorn)
 - Server components call Django directly using `API_URL`, which becomes the in-cluster Service URL.
 - All backend config comes from environment variables (`backend/.env` locally, a ConfigMap/Secret in the cluster). The `POSTGRES_*` names match the official Postgres image, so one Secret can feed both.
 - Live games run over a WebSocket at `/ws/games/{code}` (Django Channels). Every move goes through `games/services.py`, which locks the game row and stores the result in Postgres, so a restarted server loses nothing. The host's browser is the game clock: when time runs out it ends the question, so the server never holds a timer in memory.
-- There is one WebSocket server for now, so Channels broadcasts in memory. A second replica will need Redis (PLAN.md step 4).
+- Django runs under uvicorn (ASGI), one process serving both the API and WebSockets, with pooled Postgres connections. Channels broadcasts in memory for now, so the backend must stay a single process and replica until Redis arrives (PLAN.md step 4).
 - `/api/health/live` is for the liveness probe and `/api/health/ready` for the readiness probe (it checks Postgres).
 
 ```
 backend/
-  Dockerfile  production image: gunicorn for the API, daphne for WebSockets, static files via WhiteNoise
-  config/     settings, urls, wsgi/asgi
+  Dockerfile  production image: uvicorn for the API and WebSockets, static files via WhiteNoise
+  requirements-dev.txt  adds test-only tools (Channels' test helpers need Daphne)
+  config/     settings, urls, asgi (HTTP and WebSocket routing)
   core/       health endpoints
   users/      User model (host/player roles), auth API under /api/auth
   quizzes/    quiz builder API under /api/quizzes (hosts only; played quizzes are read-only)
@@ -76,4 +76,5 @@ frontend/
   next.config.ts   dev-only /api and /ws rewrites, standalone output
 gateway/
   Caddyfile        local stand-in for the cluster Gateway routes
+  Dockerfile       bakes the Caddyfile in, so `make up` picks up route changes
 ```

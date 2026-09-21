@@ -18,8 +18,6 @@ ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["localhost", "127.0.0.
 CSRF_TRUSTED_ORIGINS = env.list("DJANGO_CSRF_TRUSTED_ORIGINS", default=[])
 
 INSTALLED_APPS = [
-    # First, so `runserver` serves WebSockets too.
-    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -45,7 +43,6 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "config.urls"
-WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
 TEMPLATES = [
@@ -74,7 +71,9 @@ DATABASES = {
         "PASSWORD": env("POSTGRES_PASSWORD"),
         "HOST": env("POSTGRES_HOST", default="localhost"),
         "PORT": env.int("POSTGRES_PORT", default=5432),
-        "CONN_MAX_AGE": env.int("POSTGRES_CONN_MAX_AGE", default=60),
+        # ASGI serves requests from a thread pool, so pool connections instead of keeping one per thread.
+        "OPTIONS": {"pool": {"min_size": 2, "max_size": env.int("POSTGRES_POOL_MAX_SIZE", default=10)}},
+        # With a pool this checks each connection before handing it out, e.g. after Postgres restarts.
         "CONN_HEALTH_CHECKS": True,
     }
 }
@@ -103,10 +102,12 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,
     "DEFAULT_THROTTLE_RATES": {"auth": env("DJANGO_AUTH_THROTTLE_RATE", default="10/min")},
+    # Throttle by the address the gateway saw, not one a client wrote into X-Forwarded-For.
+    "NUM_PROXIES": env.int("DJANGO_NUM_PROXIES", default=1),
 }
 
 
-# WebSockets: in memory while there is a single WebSocket server; Redis comes with the
+# WebSockets: in memory while the backend runs as one process; Redis comes with the
 # second replica (PLAN.md step 4).
 
 CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
