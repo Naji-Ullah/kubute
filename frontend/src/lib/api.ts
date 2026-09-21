@@ -17,9 +17,13 @@ export async function parseResponse<T>(res: Response): Promise<T> {
 
 export type FormErrors = { fields: Record<string, string>; form?: string };
 
-const FALLBACK_ERROR = "Something went wrong. Please try again.";
+export const FALLBACK_ERROR = "Something went wrong. Please try again.";
 
-function firstMessage(value: unknown): string | undefined {
+export function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+export function firstMessage(value: unknown): string | undefined {
   if (typeof value === "string") return value;
   const items = Array.isArray(value) ? value : value && typeof value === "object" ? Object.values(value) : [];
   for (const item of items) {
@@ -30,7 +34,7 @@ function firstMessage(value: unknown): string | undefined {
 }
 
 export function toFormErrors(error: unknown): FormErrors {
-  if (!(error instanceof ApiError) || !error.body || typeof error.body !== "object") {
+  if (!(error instanceof ApiError) || !isRecord(error.body)) {
     return { fields: {}, form: FALLBACK_ERROR };
   }
   const fields: Record<string, string> = {};

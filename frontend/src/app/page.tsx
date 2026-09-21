@@ -22,7 +22,9 @@ export default async function HomePage() {
           kubute runs live quizzes: build one, share a code, and see every answer and score as it happens.
         </p>
         <div className="mt-10 flex flex-wrap items-center gap-3">
-          {user ? (
+          {user?.role === "host" ? (
+            <ButtonLink href="/quizzes">Your quizzes</ButtonLink>
+          ) : user ? (
             <p className="text-muted">
               Signed in as <span className="text-foreground">{displayName(user)}</span>.
             </p>

@@ -7,6 +7,8 @@ import { Button } from "@/components/button";
 import { Field, FormError, type FieldProps } from "@/components/field";
 import { toFormErrors, type FormErrors } from "@/lib/api";
 import { clientApi } from "@/lib/api.client";
+import type { User } from "@/lib/types";
+import { homePath } from "@/lib/user";
 
 const FIELDS = {
   name: { name: "name", label: "Name", autoComplete: "name", maxLength: 100 },
@@ -39,8 +41,8 @@ export function AuthForm({ endpoint, fields, submitLabel }: AuthFormProps) {
     const body = Object.fromEntries(new FormData(event.currentTarget));
     startTransition(async () => {
       try {
-        await clientApi(endpoint, { method: "POST", body });
-        router.replace("/");
+        const user = await clientApi<User>(endpoint, { method: "POST", body });
+        router.replace(homePath(user));
         router.refresh();
       } catch (error) {
         setErrors(toFormErrors(error));
